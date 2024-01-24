@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 require('dotenv').config();
 import express, {Request, Response} from 'express';
 import helmet from 'helmet';
@@ -8,6 +9,10 @@ import {ApolloServer} from '@apollo/server';
 import {expressMiddleware} from '@apollo/server/express4';
 import typeDefs from './api/schemas/index';
 import resolvers from './api/resolvers/index';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
 
 const app = express();
 
@@ -23,12 +28,15 @@ const app = express();
     app.get('/', (_req: Request, res: Response<MessageResponse>) => {
       res.send({message: 'Server is running'});
     });
-
     const server = new ApolloServer({
       typeDefs,
       resolvers,
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
     });
+
     await server.start();
+
+    app.use('/graphql', cors(), express.json(), expressMiddleware(server));
 
     app.use(notFound);
     app.use(errorHandler);
@@ -36,7 +44,5 @@ const app = express();
     console.error((error as Error).message);
   }
 })();
-
-app.use('/graphql', cors(), express.json(), expressMiddleware(server));
 
 export default app;
