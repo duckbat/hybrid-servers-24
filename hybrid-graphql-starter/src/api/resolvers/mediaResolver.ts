@@ -7,6 +7,8 @@ import {
   postMedia,
   putMedia,
 } from '../models/mediaModel';
+import {MyContext} from '../../local-types';
+import {GraphQLError} from 'graphql';
 
 export default {
   Query: {
@@ -26,7 +28,13 @@ export default {
     createMediaItem: async (
       _parent: undefined,
       args: {input: Omit<MediaItem, 'media_id' | 'created_at' | 'thumbnail'>},
+      context: MyContext,
     ) => {
+      if (!context.user || !context.user.user_id) {
+        throw new GraphQLError('Not authorized', {
+          extensions: {code: 'NOT_AUTHORIZED'},
+        });
+      }
       return await postMedia(args.input);
     },
 
